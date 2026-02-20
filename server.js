@@ -186,7 +186,7 @@ ${getTotal(idx,dateRows).toLocaleString()}`
   }
 
   // =====================================================
-  // STN WISE (SEPARATE SHEET + AUTO TOTAL)
+  // STN WISE (SEPARATE SHEET + EXACT HEADER LOGIC)
   // =====================================================
   const machineMatch = question.match(/stn\s?([1-5])/);
 
@@ -220,18 +220,24 @@ ${getTotal(idx,dateRows).toLocaleString()}`
     let grandTotal = 0;
     let breakdown = "";
 
-    mHeaders.forEach((h,i)=>{
-      const name = h.toLowerCase();
+    // 🔥 EXACT HEADER MATCH LOGIC ADD করা হলো
+    const targetHeaders = [
+      "Boro Finish",
+      "Soto Finish",
+      "Dry",
+      "Digital Finish",
+      "Coating",
+      "Re Coating",
+      "Re Finish"
+    ];
 
-      if (
-        name.includes("finish") ||
-        name.includes("coating") ||
-        name.includes("dry")
-      ) {
-        const total = getTotalM(i, runningRowsM);
-        if (total > 0) {
+    targetHeaders.forEach(title=>{
+      const idx = mHeaders.findIndex(h=>h.trim().toLowerCase()===title.toLowerCase());
+      if(idx!==-1){
+        const total = getTotalM(idx,runningRowsM);
+        if(total>0){
           grandTotal += total;
-          breakdown += `${h} : ${total.toLocaleString()}\n`;
+          breakdown += `${title} : ${total.toLocaleString()}\n`;
         }
       }
     });
