@@ -186,7 +186,7 @@ ${getTotal(idx,dateRows).toLocaleString()}`
   }
 
   // =====================================================
-  // STN WISE (SEPARATE SHEET + EXACT HEADER LOGIC)
+  // STN WISE (SEPARATE SHEET + FULL TOTAL)
   // =====================================================
   const machineMatch = question.match(/stn\s?([1-5])/);
 
@@ -203,41 +203,32 @@ ${getTotal(idx,dateRows).toLocaleString()}`
     const mHeaders = machineDb[0];
     const mRows = machineDb.slice(1);
 
-    const runningRowsM =
-      mRows.filter(r =>
-        r[0] &&
-        r[0].toLowerCase().includes(currentMonth)
-      );
+    // ✅ FULL DATA (NO MONTH FILTER)
+    const runningRowsM = mRows;
 
     const getTotalM = (index, dataRows) =>
       dataRows.reduce((t,r)=>t+(parseFloat(r[index])||0),0);
 
     let output =
-`📊 RUNNING MONTH STN ${stnNumber}
+`📊 STN ${stnNumber} FULL REPORT
 ━━━━━━━━━━━━━━━━━━
 `;
 
     let grandTotal = 0;
     let breakdown = "";
 
-    // 🔥 EXACT HEADER MATCH LOGIC ADD করা হলো
-    const targetHeaders = [
-      "Boro Finish",
-      "Soto Finish",
-      "Dry",
-      "Digital Finish",
-      "Coating",
-      "Re Coating",
-      "Re Finish"
-    ];
+    mHeaders.forEach((h,i)=>{
+      const name = h.toLowerCase();
 
-    targetHeaders.forEach(title=>{
-      const idx = mHeaders.findIndex(h=>h.trim().toLowerCase()===title.toLowerCase());
-      if(idx!==-1){
-        const total = getTotalM(idx,runningRowsM);
-        if(total>0){
+      if (
+        name.includes("finish") ||
+        name.includes("coating") ||
+        name.includes("dry")
+      ) {
+        const total = getTotalM(i, runningRowsM);
+        if (total > 0) {
           grandTotal += total;
-          breakdown += `${title} : ${total.toLocaleString()}\n`;
+          breakdown += `${h} : ${total.toLocaleString()}\n`;
         }
       }
     });
