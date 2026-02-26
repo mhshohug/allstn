@@ -31,7 +31,6 @@ body{
   position:absolute;
   top:10px;
   padding:6px 12px;
-  background:#22c55e;
   border:none;
   border-radius:6px;
   color:white;
@@ -39,8 +38,15 @@ body{
   font-size:13px;
 }
 
-#printBtn{ right:110px; }
-#pdfBtn{ right:20px; background:#3b82f6; }
+#printBtn{
+  right:110px;
+  background:#22c55e;
+}
+
+#pdfBtn{
+  right:20px;
+  background:#3b82f6;
+}
 
 /* ===== FIXED COMMAND BAR ===== */
 #topBar{
@@ -126,6 +132,10 @@ body{
   font-size:15px;
 }
 </style>
+
+<!-- PDF Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 </head>
 
 <body>
@@ -223,7 +233,7 @@ text.addEventListener("keypress", function(e){
   }
 });
 
-/* ===== PROFESSIONAL PRINT FUNCTION ===== */
+/* ===== PRINT FUNCTION ===== */
 function printChat(){
 
   const botMessages = document.querySelectorAll(".bot");
@@ -244,18 +254,18 @@ function printChat(){
       <title>Stenter Report</title>
       <style>
         body{ font-family:Arial; padding:30px; }
-        h1{ text-align:center; margin-bottom:5px; }
-        h3{ text-align:center; margin-top:0; }
+        h1{ text-align:center; }
         hr{ margin:20px 0; }
       </style>
     </head>
     <body>
       <h1>Sukhy Dyeing & Finishing Mills LTD.</h1>
-      <h3>All Stenter Report</h3>
       <p><b>Query:</b> ${lastUserQuery}</p>
       <p><b>Date:</b> ${dateTime}</p>
       <hr>
       ${reportContent}
+      <hr>
+      <p>Prepared By: Shohug</p>
     </body>
     </html>
   `);
@@ -264,9 +274,72 @@ function printChat(){
   newWindow.print();
 }
 
-/* ===== DIRECT PDF DOWNLOAD ===== */
+/* ===== ENTERPRISE PDF DOWNLOAD ===== */
 function downloadPDF(){
-  printChat();
+
+  const botMessages = document.querySelectorAll(".bot");
+  let reportContent = "";
+  let totalLines = 0;
+
+  botMessages.forEach(msg=>{
+    reportContent += `
+      <div style="margin-bottom:12px;padding:10px;background:#f8fafc;border-left:4px solid #065f46;font-size:13px;line-height:1.6;">
+        ${msg.innerHTML}
+      </div>
+    `;
+    totalLines++;
+  });
+
+  const today = new Date();
+  const dateTime = today.toLocaleString();
+
+  const fileDate =
+    today.getFullYear()+"-"+(today.getMonth()+1)+"-"+today.getDate()+"_"+today.getHours()+"-"+today.getMinutes();
+
+  const element = document.createElement("div");
+
+  element.innerHTML = `
+    <div style="padding:30px;font-family:Arial;color:#000;">
+      <div style="text-align:center;margin-bottom:10px;">
+        <img src="https://i.imgur.com/8Km9tLL.png" style="height:60px;margin-bottom:5px;">
+        <h1 style="margin:0;font-size:20px;">Sukhy Dyeing & Finishing Mills LTD.</h1>
+        <div style="font-size:14px;">Enterprise Stenter Production Report</div>
+      </div>
+      <hr>
+      <div style="margin-top:10px;font-size:13px;">
+        <b>Query:</b> ${lastUserQuery || "Custom Report"} <br>
+        <b>Generated:</b> ${dateTime}
+      </div>
+      <hr style="margin:15px 0;">
+      <div style="background:#ecfdf5;padding:10px;border:1px solid #10b981;margin-bottom:15px;font-size:13px;">
+        <b>Total Report Sections:</b> ${totalLines}
+      </div>
+      ${reportContent}
+      <hr style="margin:20px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <div>
+          Prepared By: Shohug <br>
+          Department: Production ERP
+        </div>
+        <div>
+          Signature: ____________________
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:25px;font-size:11px;">
+        Page 1 of 1
+      </div>
+    </div>
+  `;
+
+  html2pdf()
+    .from(element)
+    .set({
+      margin:10,
+      filename:`Stenter_Report_${fileDate}.pdf`,
+      html2canvas:{ scale:2 },
+      jsPDF:{ unit:'mm', format:'a4', orientation:'portrait' }
+    })
+    .save();
 }
 </script>
 
