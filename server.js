@@ -2,12 +2,12 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 
-const app = express();
+const router = express.Router();
 const PORT = 3000;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(__dirname));
+router.use(cors());
+router.use(express.json());
+router.use(express.static(__dirname));
 
 const SHEET_ID = "1Yt4HMt7fzJdlJ-CtdEiEHG2Bntj3CwUdPVpMSJYXPZI";
 
@@ -35,7 +35,7 @@ async function fetchSheetByGid(gid) {
   );
 }
 
-app.post("/ask", async (req, res) => {
+router.post("/ask", async (req, res) => {
 
   let question = (req.body.question || "").toLowerCase().trim();
 
@@ -43,9 +43,6 @@ app.post("/ask", async (req, res) => {
   const now = new Date();
   const currentMonth = months[now.getMonth()];
 
-  // ===============================
-  // LOAD MAIN PRODUCTION SHEET
-  // ===============================
   const mainDb = await fetchSheetByGid(MAIN_GID);
 
   if (!mainDb || mainDb.length <= 1)
@@ -63,9 +60,6 @@ app.post("/ask", async (req, res) => {
   const runningRows =
     rows.filter(r => r[0] && r[0].toLowerCase().includes(currentMonth));
 
-  // =====================================================
-  // DATE MATCH
-  // =====================================================
   const dateMatch =
     question.match(/(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/);
 
@@ -127,9 +121,6 @@ ${getTotal(idx,dateRows).toLocaleString()}`
     return res.json({ reply: output });
   }
 
-  // =====================================================
-  // TOTALL STN (Running Month - MAIN SHEET)
-  // =====================================================
   if (question.includes("totall stn")) {
 
     let output =
@@ -167,9 +158,6 @@ ${getTotal(idx,dateRows).toLocaleString()}`
     return res.json({ reply: output });
   }
 
-  // =====================================================
-  // TOTALL RUNNING MONTH
-  // =====================================================
   if (question === "totall") {
 
     let output =
@@ -185,9 +173,6 @@ ${getTotal(idx,dateRows).toLocaleString()}`
     return res.json({ reply: output });
   }
 
-  // =====================================================
-  // STN WISE (SEPARATE SHEET + FULL TOTAL)
-  // =====================================================
   const machineMatch = question.match(/stn\s?([1-5])/);
 
   if (machineMatch) {
@@ -202,9 +187,6 @@ ${getTotal(idx,dateRows).toLocaleString()}`
 
     const mHeaders = machineDb[0];
     const mRows = machineDb.slice(1);
-
-    // ✅ FULL DATA (NO MONTH FILTER)
-    const runningRowsM = mRows;
 
     const getTotalM = (index, dataRows) =>
       dataRows.reduce((t,r)=>t+(parseFloat(r[index])||0),0);
@@ -225,7 +207,7 @@ ${getTotal(idx,dateRows).toLocaleString()}`
         name.includes("coating") ||
         name.includes("dry")
       ) {
-        const total = getTotalM(i, runningRowsM);
+        const total = getTotalM(i, mRows);
         if (total > 0) {
           grandTotal += total;
           breakdown += `${h} : ${total.toLocaleString()}\n`;
@@ -242,9 +224,6 @@ ${getTotal(idx,dateRows).toLocaleString()}`
     return res.json({ reply: output });
   }
 
-  // =====================================================
-  // PROCESS RUNNING MONTH (MAIN SHEET)
-  // =====================================================
   if (
     question.includes("finish") ||
     question.includes("coating") ||
@@ -267,4 +246,4 @@ ${getTotal(idx,runningRows).toLocaleString()}`
 
 });
 
-app.listen(PORT, ()=>console.log("✅ Industrial ERP Running"));
+module.exports = router;
